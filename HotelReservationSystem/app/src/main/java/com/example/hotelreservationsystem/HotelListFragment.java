@@ -11,13 +11,18 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class HotelListFragment extends Fragment {
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class HotelListFragment extends Fragment implements ItemClickListener{
     View view;
     TextView headingTextView;
     List<HotelListData> userListResponseData;
@@ -73,22 +78,76 @@ public class HotelListFragment extends Fragment {
         progressBar.setVisibility(view.VISIBLE);
         Api.getClient().getHotelLists(new Callback<List<HotelListData>>() {
             @Override
+            public void onResponse(Call<List<HotelListData>> call, Response<List<HotelListData>> response) {
+                List<HotelListData> userListResponses = response.body();
+                userListResponseData = userListResponses;
+
+                //Calling recycler view
+                setupRecyclerView();
+            }
+
+            @Override
+            public void onFailure(Call<List<HotelListData>> call, Throwable t) {
+                Toast.makeText(getActivity(), t.toString(), Toast.LENGTH_SHORT).show();
+
+            }
+
+            /*@Override
             public void success(List<HotelListData> userlistResponse, Response response){
                userListResponseData= userlistResponse;
 
-               progressBar.setVisibility(View.GONE);
-               RecyclerView recyclerView = view.findViewById(R.id.hotel_list_recycler_view);
-               recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-               HotelListAdapter hotelListAdapter = new HotelListAdapter(getActivity(), userListResponseData);
-               recyclerView.setAdapter(hotelListAdapter);
+          //     progressBar.setVisibility(View.GONE);
+            //   RecyclerView recyclerView = view.findViewById(R.id.hotel_list_recycler_view);
+              // recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+             //  HotelListAdapter hotelListAdapter = new HotelListAdapter(getActivity(), userListResponseData);
+            //   recyclerView.setAdapter(hotelListAdapter);
+
+               //Bind the clickListerner
+              //  hotelListAdapter.setClickListener(this);
+                setupRecyclerView();
 
             }
             @Override
-            public void failure(RetrofitError error){
+            public void failure(Call<List<HotelSearchFragment>> call, Throwable th){
                 progressBar.setVisibility(View.GONE);
-                Toast.makeText(getActivity(),error.toString(),Toast.LENGTH_LONG.show());
-            }
+                Toast.makeText(getActivity(), th.toString(),Toast.LENGTH_LONG.show());
+            }*/
         });
+    }
+
+    private void setupRecyclerView(){
+        progressBar.setVisibility(View.GONE);
+        RecyclerView recyclerView = view.findViewById(R.id.hotel_list_recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        HotelListAdapter hotelListAdapter = new HotelListAdapter(getActivity(),userListResponseData);
+        recyclerView.setAdapter(hotelListAdapter);
+
+        //Bind the clickListerner
+        hotelListAdapter.setClickListener(this);
+    }
+
+    @Override
+    public void onClick(View view, int position) {
+        HotelListData hotelListData = userListResponseData.get(position);
+        String hotelName= hotelListData.getHotel_name();
+        String price= hotelListData.getPrice();
+        String availability= hotelListData.getAvailability();
+
+        Bundle bundle = new Bundle();
+
+        bundle.putString("hotel name",hotelName);
+        bundle.putString("price", price);
+        bundle.putString("availability", availability);
+
+        HotelGuestListDetailsFragment hotelGuestListDetailsFragment= new HotelGuestListDetailsFragment();
+        hotelGuestListDetailsFragment.setArguments(bundle);
+
+        FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+        fragmentTransaction.remove(HotelListFragment.this);
+        fragmentTransaction.replace(R.id.main_layout, hotelGuestListDetailsFragment);
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+
     }
 
     //public void setArguments(Bundle bundle) {

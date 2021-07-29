@@ -9,17 +9,18 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class HotelListAdapter extends RecyclerView.Adapter<HotelListAdapter.ViewHolder> {
     // AT first, view holder is created and connected with the fragment views.
     // Then, the hotel_list_layout is being inflated into this
     //Then, the value and positions are fixed
     //Count keeps track of the number of entries of data for a particular hotel
-    private ArrayList<HotelListData> hotelListData;
+    private List<HotelListData> hotelListData;
     private LayoutInflater layoutInflater;
+    private ItemClickListener clickListener;
 // Here, context is the current state / screen
-    HotelListAdapter(Context context, ArrayList<HotelListData> hotelListData){
+    HotelListAdapter(Context context, List<HotelListData> hotelListData){
         this.layoutInflater = LayoutInflater.from(context);
         this.hotelListData = hotelListData;
     }
@@ -36,7 +37,7 @@ public class HotelListAdapter extends RecyclerView.Adapter<HotelListAdapter.View
 
     @Override
     public void onBindViewHolder(@NonNull HotelListAdapter.ViewHolder holder, int position) {
-         String hotelName= hotelListData.get(position).getHotelName();
+         String hotelName= hotelListData.get(position).getHotel_name();
          String hotelPrice =hotelListData.get(position).getPrice();
          String hotelAvailability= hotelListData.get(position).getAvailability();
 
@@ -56,7 +57,11 @@ public class HotelListAdapter extends RecyclerView.Adapter<HotelListAdapter.View
         }
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder{
+    public void setClickListener(ItemClickListener itemClickListener){
+        this.clickListener = itemClickListener;
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         TextView hotelName, hotelPrice, hotelAvailability;
 
@@ -65,7 +70,14 @@ public class HotelListAdapter extends RecyclerView.Adapter<HotelListAdapter.View
             hotelName = itemView.findViewById(R.id.hotel_name_text_view);
             hotelPrice= itemView.findViewById(R.id.price_text_view);
             hotelAvailability = itemView.findViewById(R.id.availability_text_view);
+            itemView.setOnClickListener(this);
+        }
 
+        @Override
+        public void onClick(View v) {
+            if(clickListener!=null){
+                clickListener.onClick(itemView, getAbsoluteAdapterPosition());
+            }
         }
     }
 }
